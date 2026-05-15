@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "Startup": {
+      "title": "Startup",
+      "description": "A startup profile with intelligence metrics and AI insights.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the startup" },
+        "sector": { "type": "string", "description": "Industry sector" },
+        "stage": { "type": "string", "description": "Funding stage (e.g., Early, Growth)" },
+        "market_potential": { "type": "number", "description": "Market potential score (1-10)" },
+        "funding_total": { "type": "number", "description": "Total funding raised" },
+        "burn_rate": { "type": "number", "description": "Monthly burn rate" },
+        "revenue_growth_pct": { "type": "number", "description": "Year-over-year revenue growth percentage" },
+        "team_pedigree": { "type": "number", "description": "Team pedigree score (1-10)" },
+        "competitive_moat": { "type": "string", "description": "Description of competitive advantage" },
+        "location": { "type": "string", "description": "Geographic location/region" },
+        "founded_date": { "type": "string", "format": "date-time", "description": "Date the startup was founded" },
+        "last_funding_round": { "type": "string", "description": "Most recent funding round (e.g., Series A, Seed)" },
+        "last_funding_date": { "type": "string", "format": "date-time", "description": "Date of the last funding round" },
+        "total_score": { "type": "number", "description": "Weighted investment attractiveness score (0-100)" },
+        "market_score": { "type": "number", "description": "Market potential component score" },
+        "growth_score": { "type": "number", "description": "Growth trajectory component score" },
+        "financial_score": { "type": "number", "description": "Financial health component score" },
+        "ai_insight": { "type": "string", "description": "Gemini-generated investment thesis and flags" },
+        "uid": { "type": "string", "description": "User ID of the creator" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation" }
+      },
+      "required": ["name", "sector", "market_potential", "total_score", "uid"]
+    }
+  },
+  "firestore": {
+    "startups": {
+      "schema": "Startup",
+      "description": "Collection of startups being tracked."
+    }
+  }
+}

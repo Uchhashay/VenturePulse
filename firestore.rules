@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: startups
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required)
+    //   - sector: string (required)
+    //   - stage: string (optional)
+    //   - market_potential: number (required, 1-10)
+    //   - funding_total: number (optional)
+    //   - burn_rate: number (optional)
+    //   - revenue_growth_pct: number (optional)
+    //   - team_pedigree: number (optional, 1-10)
+    //   - competitive_moat: string (optional)
+    //   - total_score: number (required, 0-100)
+    //   - market_score: number (optional)
+    //   - growth_score: number (optional)
+    //   - financial_score: number (optional)
+    //   - ai_insight: string (optional)
+    //   - uid: string (required, owner)
+    //   - createdAt: timestamp (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function isValidStartup(data) {
+      return data.keys().hasAll(['name', 'sector', 'market_potential', 'total_score', 'uid']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.sector is string && data.sector.size() > 0 && data.sector.size() < 50 &&
+             data.market_potential is number && data.market_potential >= 1 && data.market_potential <= 10 &&
+             data.total_score is number && data.total_score >= 0 && data.total_score <= 100 &&
+             data.uid is string && data.uid == request.auth.uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "dhruvsingh349@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /startups/{startupId} {
+      // Users can only read their own startups or if they are admin
+      allow read: if isDocOwner() || isAdmin();
+      
+      // Users can create startups if they are authenticated and the data is valid
+      allow create: if isAuthenticated() && isValidStartup(request.resource.data) && uidUnchanged();
+      
+      // Users can update their own startups if the data is valid and uid is not modified
+      allow update: if isDocOwner() && isValidStartup(request.resource.data) && uidNotModified();
+      
+      // Users can delete their own startups
+      allow delete: if isDocOwner() || isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
